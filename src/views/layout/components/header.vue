@@ -8,7 +8,7 @@
       <div class="avatar-wrap">
         <img class="avatar" :src="user.photo">
         <span>{{user.name}}</span>
-        <i class="el-icon-arrow-down el-icon--right" @click="iscollpase=!iscollpase"></i>
+        <i class="el-icon-arrow-down el-icon--right" @click="isCollpase=!isCollpase"></i>
       </div>
       <el-dropdown-menu slot="dropdown">
         <el-dropdown-item>设置</el-dropdown-item>
@@ -16,7 +16,6 @@
           组件默认是不识别原生事件的，除非内部做了处理
           https://cn.vuejs.org/v2/guide/components-custom-events.html#%E5%B0%86%E5%8E%9F%E7%94%9F%E4%BA%8B%E4%BB%B6%E7%BB%91%E5%AE%9A%E5%88%B0%E7%BB%84%E4%BB%B6
         -->
-
         <el-dropdown-item @click.native="onLogout">退出</el-dropdown-item>
       </el-dropdown-menu>
     </el-dropdown>
@@ -24,20 +23,29 @@
 </template>
 <script>
 import { getUserProfile } from '@/api/user.js'
+import globalBus from '@/utils/global-bus'
 export default {
   name: 'AppHeader',
   components: {},
-  props: ['is-collpase'],
+  props: {},
   data () {
     return {
       user: {},
-      iscollpase: false
+      isCollpase: false
     }
   },
   computed: {},
   watch: {},
   created () {
     this.loadUserProfile()
+    // 注册自定义事件
+    // 当这个事件发布以后，这个注册函数就会被调用到
+    globalBus.$on('update-user', (data) => {
+      this.user = data // 注意：不要这么做，对象之间赋值的是引用，会导致相互影响的问题
+      this.user.name = data.name
+      this.user.photo = data.photo
+    })
+
   },
   mounted () { },
   methods: {
