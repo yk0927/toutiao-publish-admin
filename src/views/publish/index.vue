@@ -23,8 +23,32 @@
             <el-radio :label="0">无图</el-radio>
             <el-radio :label="-1">自动</el-radio>
           </el-radio-group>
+          <!--
+            我们需要把选择的封面图片的地址放到 article.cover.images 数组中
+            当你给事件处理函数传递了自定义参数以后，就无法得到原本的那个数据参数了。
+            如果想要在事件处理函数自定义传参以后还想得到原来的那个事件本身的参数，则手动指定 $event，它就代表那个事件本身的参数
+            在组件上使用 v-model
+            当你给子组件提供的数据既要使用还要修改，这个时候我们可以使用 v-model 简化数据绑定。
+            v-model="article.cover.images[index]"
+              给子组件传递了一个名字叫 value 的数据
+              :value="article.cover.images[index]"
+              默认监听 input 事件，当事件发生，它会让绑定数据 = 事件参数
+              @input="article.cover.images[index] = 事件参数"
+            注意：v-model 仅仅是简写了而已，本质还在在父子组件通信
+            v-model 的参考文档：https://cn.vuejs.org/v2/guide/components-custom-events.html#%E8%87%AA%E5%AE%9A%E4%B9%89%E7%BB%84%E4%BB%B6%E7%9A%84-v-model
+           -->
+
+          <template v-if="article.cover.type>0">
+            <upload-cover :key="cover" v-for="(cover,index) in article.cover.type" v-model="article.cover.images[index]" />
+            <!-- <upload-cover
+              :key="cover"
+              v-for="(cover, index) in article.cover.type"
+              :cover-image="article.cover.images[index]"
+              @update-cover="onUpdateCover(index, $event)"
+            /> -->
+          </template>
         </el-form-item>
-        <el-form-item label="频道" prop="channel_id">
+        <el-form-item label=" 频道" prop="channel_id">
           <el-select v-model="article.channel_id" placeholder="请选择频道">
             <el-option :label="channel.name" :value="channel.id" v-for="(channel,index) in channels" :key="index"></el-option>
           </el-select>
@@ -39,6 +63,7 @@
 </template>
 
 <script>
+import UploadCover from './components/upload-cover'
 import { getArticleChannels, addArticle, updateArticle, getArticle } from '@/api/article'
 import {
   ElementTiptap, Doc, Text, Paragraph, Heading, Bold, Underline, Italic, Image, Strike, ListItem,
@@ -48,7 +73,10 @@ import 'element-tiptap/lib/index.css'
 import { uploadImage } from '@/api/image.js'
 export default {
   name: 'PublishIndex',
-  components: { 'el-tiptap': ElementTiptap },
+  components: {
+    'el-tiptap': ElementTiptap,
+    UploadCover
+  },
   props: {},
   data () {
     return {
@@ -147,46 +175,46 @@ export default {
   },
   methods: {
     onPublish (draft) {
-      this.$refs['publish-form'].validate(valid=>{
-        if(!valid){
+      this.$refs['publish-form'].validate(valid => {
+        if (!valid) {
           return
         }
         //验证通过，提交表单
         // 找到数据接口
-      // 封装请求方法
-      // 请求提交表单
-      // console.log(draft)
-      const articleId = this.$route.query.id
-      if (articleId) {
-        //修改操作
-        updateArticle(articleId, this.article, draft).then(res => {
-          console.log(res)
-          this.$message({
-            message: '修改成功',
-            type: 'success'
+        // 封装请求方法
+        // 请求提交表单
+        // console.log(draft)
+        const articleId = this.$route.query.id
+        if (articleId) {
+          //修改操作
+          updateArticle(articleId, this.article, draft).then(res => {
+            console.log(res)
+            this.$message({
+              message: '修改成功',
+              type: 'success'
+            })
+            // 跳转到内容管理页面
+            this.$router.push('/article')
           })
-          // 跳转到内容管理页面
-          this.$router.push('/article')
-        })
-      } else {
-        //发布操作
-        addArticle(this.article, draft).then(res => {
-          // 处理响应结果
-          console.log(res)
-          this.$message({
-            message: `${draft ? '存入草稿' : '发布'}成功`,
-            type: 'success'
+        } else {
+          //发布操作
+          addArticle(this.article, draft).then(res => {
+            // 处理响应结果
+            // console.log(res)
+            this.$message({
+              message: `${draft ? '存入草稿' : '发布'}成功`,
+              type: 'success'
+            })
+            // 跳转到内容管理页面
+            this.$router.push('/article')
           })
-          // 跳转到内容管理页面
-          this.$router.push('/article')
-        })
-      }
-    })
-  },
+        }
+      })
+    },
     loadChannels () {
       getArticleChannels().then(res => {
         this.channels = res.data.data.channels
-        console.log(this.channels)
+        // console.log(this.channels)
       })
     },
     //修改文章，加载内容
@@ -195,7 +223,13 @@ export default {
         this.article = res.data.data
 
       })
+    },
+    onUpdateCover (index, url) {
+      this.article.cover.images[index] = url
+      console.log('res', url)
+
     }
+
 
   }
 }
