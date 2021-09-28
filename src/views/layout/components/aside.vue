@@ -2,7 +2,7 @@
   <!--
     el-menu-item 的 index 不能重复，确保唯一即可
    -->
-  <el-menu class="nav-menu" default-active="/" background-color="#002033" text-color="#fff" active-text-color="#ffd04b" router :collapse="iscollapse">
+  <el-menu class="nav-menu" :default-active="$route.path" background-color="#002033" text-color="#fff" active-text-color="#ffd04b" router :collapse="iscollapse">
     <el-menu-item index="/">
       <i class="el-icon-s-home"></i>
       <span slot="title">首页</span>
